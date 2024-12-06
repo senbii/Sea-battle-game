@@ -3,7 +3,7 @@ import java.util.Random;
 import java.util.Scanner;
 
 public class Main {
-    static ArrayList<Player> players = new ArrayList<>();
+    private static ArrayList<Player> players = new ArrayList<>();
     private static int rows = 7;
     private static int cols = 7;
     private static int[][] matrix = new int[rows][cols];
@@ -37,11 +37,10 @@ public class Main {
                 players.add(player);
             }
 
-            showEmptyField();
-            int numberOfButllets = 30;
+            showField();
+            int numberOfButllets = 0;
 
-            while (numberOfButllets > 0) {
-                System.out.println("Attempts left: " + numberOfButllets);
+            while (true) {
                 int[] coordinates = null;
 
                 while (coordinates == null) {
@@ -56,32 +55,26 @@ public class Main {
 
                     if (matrix[row][col] == 1) {
                         if (isShipSunk(row, col)) {
-                            System.out.println("You've sunk a ship! \uD83D\uDCA5");
+                            System.out.println("You've sunk a ship!");
                             markSunkShip(row, col);
                         }
                     }
 
                     System.out.println();
-                    showUpdatedField();
+                    clearScreen();
+                    showField();
 
                     if (checkAllShipsSunk()) {
-                        System.out.println("Congratulations! You've sunk all ships!");
-                        player.incrementWins();
+                        System.out.println("Congratulations! You've sunk all ships! You shot " + numberOfButllets + " times!");
+                        player.setScore(numberOfButllets);
                         break;
                     }
 
-                    numberOfButllets--;
+                    numberOfButllets++;
 
                 } else {
                     System.out.println("You've already shot at this position. Try again.");
                 }
-            }
-
-            if (numberOfButllets == 0) {
-                System.out.println("\nGame over! You've used all your attempts.");
-                System.out.println("This is where the ships were located:");
-                showField();
-                player.incrementLosses();
             }
 
             while (true) {
@@ -161,29 +154,9 @@ public class Main {
         return true;
     }
 
-    public void clearScreen() {
-        System.out.println("\\033[H\\033[2J");
+    public static void clearScreen() {
+        System.out.println("\033[H\033[2J");
         System.out.flush();
-    }
-
-    public static void showField() {
-        System.out.print("   ");
-        for (char c = 'A'; c < 'A' + cols; c++) {
-            System.out.print(c + "  ");
-        }
-        System.out.println();
-
-        for (int i = 0; i < rows; i++) {
-            System.out.print((i + 1) + " ");
-            for (int j = 0; j < cols; j++) {
-                if (matrix[i][j] == 0) {
-                    System.out.print("~ ");
-                } else {
-                    System.out.print("\uD83D\uDEE5\uFE0F ");
-                }
-            }
-            System.out.println();
-        }
     }
 
     public static void showEmptyField() {
@@ -366,7 +339,7 @@ public class Main {
         return false;
     }
 
-    public static void showUpdatedField() {
+    public static void showField() {
         System.out.print("  ");
         for (char c = 'A'; c < 'A' + cols; c++) {
             System.out.print(c + " ");
@@ -412,41 +385,30 @@ public class Main {
 
     static class Player {
         private String name;
-        private int wins;
-        private int losses;
+        private int score;
 
         public Player(String name) {
             this.name = name;
-            this.wins = 0;
-            this.losses = 0;
         }
 
         public String getName() {
             return name;
         }
 
-        public int getWins() {
-            return wins;
+        public int getScore() {
+            return score;
         }
 
-        public int getLosses() {
-            return losses;
-        }
-
-        public void incrementWins() {
-            wins++;
-        }
-
-        public void incrementLosses() {
-            losses++;
+        public void setScore(int score) {
+            this.score = score;
         }
     }
 
-    public static void sortPlayersByWins(Player[] players) {
+    public static void sortPlayers(Player[] players) {
         int n = players.length;
         for (int i = 0; i < n - 1; i++) {
             for (int j = 0; j < n - i - 1; j++) {
-                if (players[j].getWins() < players[j + 1].getWins()) {
+                if(players[j].getScore() > players[i].getScore()) {
                     Player temp = players[j];
                     players[j] = players[j + 1];
                     players[j + 1] = temp;
@@ -459,10 +421,10 @@ public class Main {
         Player[] playerArray = new Player[players.size()];
         players.toArray(playerArray);
 
-        sortPlayersByWins(playerArray);
+        sortPlayers(playerArray);
 
-        for (Player p : playerArray) {
-            System.out.println(p.getName() + " - Wins: " + p.getWins() + ", Losses: " + p.getLosses());
+        for (int i = 0; i < players.size(); i++) {
+            System.out.println((i+1) + ". " + playerArray[i].getName() + "\t:\t" + playerArray[i].getScore());
         }
     }
 }
